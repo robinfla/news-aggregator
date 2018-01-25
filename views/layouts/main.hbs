@@ -1,0 +1,10 @@
+<div>
+    {{#if articles.length}}
+    <h1>Top articles of the week</h1>
+        <ul>
+            {{#each articles}}
+                <li class="article">{{source}}: <a href="{{url}}">{{title}}</a></li>
+            {{/each}}
+        </ul>
+    {{/if}}
+</div>
