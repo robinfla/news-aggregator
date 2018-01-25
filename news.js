@@ -25,15 +25,17 @@ const options = {
     }
 };
 
-const getArticles = MongoClient.connect('mongodb://localhost:27017/watchDB', (err, client) => {
-    if (err) return console.log(err);
-    console.log("successfully connected to watchDB");
-    const db = client.db('watchDB');
-    storeArticles(db, () => {
-        console.log("nothing to see here, move along");
-        // client.close();
-    });
-})
+function getArticles () {
+    MongoClient.connect('mongodb://localhost:27017/watchDB', (err, client) => {
+        if (err) return console.log(err);
+        console.log("successfully connected to watchDB");
+        const db = client.db('watchDB');
+        storeArticles(db, () => {
+            console.log("article extracted & stored");
+            // client.close();
+        });
+    })
+}
 
 function Article(sourceName, title, description, url, publishedAt) {
     this.source = sourceName;
@@ -49,19 +51,19 @@ function storeArticles (db, callback) {
 
         const data = JSON.parse(body);
         console.log("Data obtained from NewsAPI");
-        console.log(data);
+        // console.log(data);
 
         const length = data.totalResults;
         let i = 0;
         while (i < length) {
             const collection = db.collection('test4');
             let res = data.articles[i];
-            console.log(res);
-            console.log(i);
+            // console.log(res);
+            // console.log(i);
             let doc = new Article(res.source.name, res.title,
                 res.description, res.url, res.publishedAt);
             insertDocument (collection, doc, () => {
-                console.log("Next document");
+                // console.log("Next document");
                 callback();
             });
             i++;
@@ -75,7 +77,7 @@ async function insertDocument (collection, doc, callback) {
         if (!count) {
             const result = collection.insert(doc, (err, result) => {
                 if (err) return console.log(`Error during insertion: ${err}`);
-                console.log("document inserted");
+                // console.log("document inserted");
                 callback();
             });
         } else {
