@@ -2,22 +2,11 @@ const request = require('request');
 const MongoClient = require('mongodb').MongoClient;
 
 const apiKey = 'b961f9b8115e429da19aa7f2106f5936';
-const keywords = ['+learning', 'data', 'machine'];
+const keywords = '"deep learning"';
 const lastWeekDate = new Date(new Date().setDate(new Date().getDate()-7));
 const todayDate = new Date();
 
 const sources = "ars-technica, bloomberg, business-insider, cnbc, engadget, fortune, hacker-news, les-echos, mashable, recode, techcrunch, techradar, the-economist, the-guardian-uk, the-next-web, the-verge, the-wall-street-journal, wired";
-
-// const sources = ['abc-news', 'abc-news-au', 'al-jazeera-english',
-//     'australian-financial-review', 'ars-technica', 'associated-press',
-//     'bbc-news', 'bloomberg', 'business-insider', 'business-insider-uk', 'cnbc',
-//     'cnn', 'crypto-coins-news', 'engadget', 'financial-post', 'financial-times',
-//     'fortune', 'google-news', 'google-news-fr', 'hacker-news', 'le-monde',
-//     'les-echos', 'mashable', 'new-scientist', 'newsweek', 'recode', 'reuters',
-//     'techcrunch', 'techradar', 'the-economist', 'the-guardian-uk',
-//     'the-huffington-post', 'the-telegraph', 'the-new-york-times', 'the-next-web',
-//     'the-telegraph', 'the-verge', 'the-wall-street-journal',
-//     'the-washington-post', 'time', 'wired'];
 
 const options = {
     url: 'https://newsapi.org/v2/everything?',
@@ -32,7 +21,7 @@ const options = {
     },
     headers: {
         'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
     }
 };
 
@@ -42,7 +31,7 @@ const getArticles = MongoClient.connect('mongodb://localhost:27017/watchDB', (er
     const db = client.db('watchDB');
     storeArticles(db, () => {
         console.log("nothing to see here, move along");
-        client.close();
+        // client.close();
     });
 })
 
@@ -60,13 +49,15 @@ function storeArticles (db, callback) {
 
         const data = JSON.parse(body);
         console.log("Data obtained from NewsAPI");
-        console.log(res);
+        console.log(data);
 
         const length = data.totalResults;
         let i = 0;
         while (i < length) {
             const collection = db.collection('test4');
             let res = data.articles[i];
+            console.log(res);
+            console.log(i);
             let doc = new Article(res.source.name, res.title,
                 res.description, res.url, res.publishedAt);
             insertDocument (collection, doc, () => {
