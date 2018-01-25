@@ -2,34 +2,33 @@ const request = require('request');
 const MongoClient = require('mongodb').MongoClient;
 
 const apiKey = 'b961f9b8115e429da19aa7f2106f5936';
-const keyword = 'Valley';
-const sinceDate = '2018-01-20';
+const keywords = ['+learning', 'data', 'machine'];
+const lastWeekDate = new Date(new Date().setDate(new Date().getDate()-7));
+const todayDate = new Date();
 
-MongoClient.connect('mongodb://localhost:27017/watchDB', (err, client) => {
-    if (err) return console.log(err);
-    console.log("successfully connected to watchDB");
-    const db = client.db('watchDB');
-    storeArticles(db, () => {
-        console.log("nothing to see here, move along");
-        client.close();
-    });
-});
+const sources = "ars-technica, bloomberg, business-insider, cnbc, engadget, fortune, hacker-news, les-echos, mashable, recode, techcrunch, techradar, the-economist, the-guardian-uk, the-next-web, the-verge, the-wall-street-journal, wired";
 
-function Article(sourceName, title, description, url, publishedAt) {
-    this.source = sourceName;
-    this.title = title;
-    this.description = description;
-    this.url = url;
-    this.date = publishedAt;
-};
+// const sources = ['abc-news', 'abc-news-au', 'al-jazeera-english',
+//     'australian-financial-review', 'ars-technica', 'associated-press',
+//     'bbc-news', 'bloomberg', 'business-insider', 'business-insider-uk', 'cnbc',
+//     'cnn', 'crypto-coins-news', 'engadget', 'financial-post', 'financial-times',
+//     'fortune', 'google-news', 'google-news-fr', 'hacker-news', 'le-monde',
+//     'les-echos', 'mashable', 'new-scientist', 'newsweek', 'recode', 'reuters',
+//     'techcrunch', 'techradar', 'the-economist', 'the-guardian-uk',
+//     'the-huffington-post', 'the-telegraph', 'the-new-york-times', 'the-next-web',
+//     'the-telegraph', 'the-verge', 'the-wall-street-journal',
+//     'the-washington-post', 'time', 'wired'];
 
 const options = {
-    url: 'https://newsapi.org/v2/top-headlines?',
+    url: 'https://newsapi.org/v2/everything?',
     qs: {
-        'q': keyword,
-        'category': ['technology', 'business'],
-        'from': sinceDate,
-        'sortBy': 'popularity'
+        'q': keywords,
+        'sources': sources,
+        'language': ['en', 'fr'],
+        'domains': "techcrunch.com, engadget.com, wsj.com",
+        'from': lastWeekDate,
+        'to': todayDate,
+        'pageSize': 100
     },
     headers: {
         'Authorization': 'Bearer ' + apiKey,
@@ -37,17 +36,36 @@ const options = {
     }
 };
 
+const getArticles = MongoClient.connect('mongodb://localhost:27017/watchDB', (err, client) => {
+    if (err) return console.log(err);
+    console.log("successfully connected to watchDB");
+    const db = client.db('watchDB');
+    storeArticles(db, () => {
+        console.log("nothing to see here, move along");
+        client.close();
+    });
+})
+
+function Article(sourceName, title, description, url, publishedAt) {
+    this.source = sourceName;
+    this.title = title;
+    this.description = description;
+    this.url = url;
+    this.date = publishedAt;
+}
+
 function storeArticles (db, callback) {
     const search = request(options, (err, res, body) => {
-        if (err) return console.log(err);
+        if (err) return console.log("Failed to get sources: " + err);
 
         const data = JSON.parse(body);
         console.log("Data obtained from NewsAPI");
+        console.log(res);
 
         const length = data.totalResults;
         let i = 0;
         while (i < length) {
-            const collection = db.collection('test2');
+            const collection = db.collection('test4');
             let res = data.articles[i];
             let doc = new Article(res.source.name, res.title,
                 res.description, res.url, res.publishedAt);
@@ -67,11 +85,17 @@ async function insertDocument (collection, doc, callback) {
             const result = collection.insert(doc, (err, result) => {
                 if (err) return console.log(`Error during insertion: ${err}`);
                 console.log("document inserted");
+                callback();
             });
+        } else {
+            callback();
         }
-        callback();
     }
     catch (err) {
         console.log(err);
     }
+};
+
+module.exports = {
+    getArticles: getArticles
 };

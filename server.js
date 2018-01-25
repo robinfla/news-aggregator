@@ -5,7 +5,8 @@ const hbs = require('express-handlebars');
 const context = require('./routes/index.js');
 const news = require('./news.js');
 
-app.listen(3000);
+app.listen(3000, () => {
+});
 
 // view engine setup //
 app.set('views', path.join(__dirname, 'views'));
