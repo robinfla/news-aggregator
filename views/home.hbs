@@ -1,14 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Weekly News Aggregator</title>
-        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.runtime.js"></script> -->
-        <!-- <script src="../app.js"></script> -->
-    </head>
-    <body>
-        <h1>Hello</h1>
-        <!-- <div id="body-app"></div> -->
-        <!-- <script src="../routes/index.js"></script> -->
-    </body>
-</html>
+{{#if articles.length}}
+    {{#each articles}}
+        <div class="list-group">
+          <a href="{{url}}" class="list-group-item list-group-item-action flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1" style="color: #007BFF; text-decoration: underline">{{title}}</h5>
+              <small class="text-muted">{{dateSincePosted date}} days ago</small>
+            </div>
+            <p class="mb-1">{{description}}</p>
+            <small style="font-style: italic">Source: {{source}}</small>
+          </a>
+        </div>
+    {{/each}}
+{{else}}
+    <h6 style="padding: 20px"> No new articles :(</h6>
+{{/if}}
