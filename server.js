@@ -43,11 +43,13 @@ app.get('/', async (req, res) => {
 });
 
 // extracting article from local database
+
 async function getContext () {
     try {
+            const lastWeekDate = new Date(new Date().setDate(new Date().getDate()-7)).toISOString();
             const client = await MongoClient.connect('mongodb://localhost:27017/watchDB');
             const db = client.db('watchDB');
-            let articles = await db.collection('test4').find().toArray();
+            let articles = await db.collection('test4').find({"date": {$gte: `${lastWeekDate}`}}).toArray();
             const context = { articles };
             client.close();
             return context;
