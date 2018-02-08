@@ -8,6 +8,7 @@ const todayDate = new Date();
 
 const sources = "ars-technica, bloomberg, business-insider, cnbc, engadget, fortune, hacker-news, les-echos, mashable, recode, techcrunch, techradar, the-economist, the-guardian-uk, the-next-web, the-verge, the-wall-street-journal, wired";
 
+// setting options for the fetch request
 const options = {
     url: 'https://newsapi.org/v2/everything?',
     qs: {
@@ -25,6 +26,7 @@ const options = {
     }
 };
 
+// connection to the DB and insertion of fetched articles
 function getArticles () {
     MongoClient.connect('mongodb://localhost:27017/watchDB', (err, client) => {
         if (err) return console.log(err);
@@ -32,11 +34,12 @@ function getArticles () {
         const db = client.db('watchDB');
         storeArticles(db, () => {
             console.log("article extracted & stored");
-            // client.close();
+            client.close();
         });
     })
 }
 
+// object constructor for mongoDB object
 function Article(sourceName, title, description, url, publishedAt) {
     this.source = sourceName;
     this.title = title;
@@ -45,25 +48,25 @@ function Article(sourceName, title, description, url, publishedAt) {
     this.date = publishedAt;
 }
 
+// fetch article with newsAPI.org and insert them into the DB
 function storeArticles (db, callback) {
     const search = request(options, (err, res, body) => {
         if (err) return console.log("Failed to get sources: " + err);
 
         const data = JSON.parse(body);
         console.log("Data obtained from NewsAPI");
-        // console.log(data);
 
         const length = data.totalResults;
         let i = 0;
         while (i < length) {
             const collection = db.collection('test4');
             let res = data.articles[i];
-            // console.log(res);
-            // console.log(i);
+            console.log(res);
+            console.log(i);
             let doc = new Article(res.source.name, res.title,
                 res.description, res.url, res.publishedAt);
             insertDocument (collection, doc, () => {
-                // console.log("Next document");
+                console.log("Next document");
                 callback();
             });
             i++;
@@ -71,13 +74,14 @@ function storeArticles (db, callback) {
     });
 }
 
+// async function for document insertion into the DB
 async function insertDocument (collection, doc, callback) {
     try {
         const count = await collection.find({"url": doc.url}).count();
         if (!count) {
             const result = collection.insert(doc, (err, result) => {
                 if (err) return console.log(`Error during insertion: ${err}`);
-                // console.log("document inserted");
+                console.log("document inserted");
                 callback();
             });
         } else {
